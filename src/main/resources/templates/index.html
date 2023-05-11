@@ -6,30 +6,89 @@
     <script src="/main.js"></script>
     <link rel="stylesheet" href="/style.css">.
     <script th:src="'https://api-maps.yandex.ru/2.1/?apikey=' + ${keyAPI} + '&lang=ru_RU'"></script>
-    <script>
-        ymaps.ready(init);
-        function init(){
-            var myMap = new ymaps.Map("map", {
-                center: [55.159902, 61.402554],
-                zoom: 10
-            });
-            var myPlacemark = new ymaps.Placemark([55.190488, 61.356632], {
-                hintContent: 'ЧЮК',
-                balloonContent: 'Это пиздец'
-            });
-            var myPlacemark1 = new ymaps.Placemark([61.110556, -122.680278], {
-                hintContent: 'Че эта!',
-                balloonContent: 'Америка?'
-            });
-
-            //addMarkersFromCSV(myMap, 'path/to/your/csv/file.csv');
-            myMap.geoObjects.add(myPlacemark);
-            myMap.geoObjects.add(myPlacemark1);
-        }
-    </script>
 </head>
+
 <body>
 <div id="map"></div>
+<div id="json-data" th:text="${jsonData}" style="display:none;"></div>
+<script>
+    ymaps.ready(init);
+    function init(){
+        var myMap = new ymaps.Map("map", {
+            center: [55.159902, 61.402554],
+            zoom: 10
+        });
+        var myPlacemark = new ymaps.Placemark([55.190488, 61.356632], {
+            hintContent: 'ЧЮК',
+            balloonContent: 'Это пиздец'
+        });
+        var myPlacemark1 = new ymaps.Placemark([61.110556, -122.680278], {
+            hintContent: 'Че эта!',
+            balloonContent: 'Америка?'
+        });
+
+        myMap.geoObjects.add(myPlacemark);
+        myMap.geoObjects.add(myPlacemark1);
+        addMarkersToMap(myMap)
+    }
+
+    function addMarkersToMap(map) {
+        // Загрузка данных из JSON файла
+        fetch('bd.json')
+            .then(response => response.json())
+            .then(data => {
+                // Перебор элементов в массиве данных
+                data.forEach(item => {
+                    // Создание метки на карте
+                    const marker = new ymaps.Placemark(
+                        [item.Latitude, item.Longitude],
+                        {
+                            balloonContentBody: item.Description,
+                            balloonContentHeader: item.Label,
+                            recyclingType: item.RecyclingType.split(',')
+                        }
+                    );
+
+                    // Добавление метки на карту
+                    map.geoObjects.add(marker);
+                });
+
+                // Создание контрола для сортировки по группам
+                const recyclingTypeControl = new ymaps.control.ListBox({
+                    data: {
+                        content: 'Тип переработки',
+                        title: 'Выберите тип переработки'
+                    },
+                    items: [
+                        { data: { type: 'all' }, options: { selectOnClick: true }, state: { selected: true }, content: 'Все' },
+                        { data: { type: '1' }, options: { selectOnClick: true }, content: 'Алюминиевая банка' },
+                        { data: { type: '2' }, options: { selectOnClick: true }, content: 'Бумага' },
+                        { data: { type: '3' }, options: { selectOnClick: true }, content: 'Картон' },
+                        { data: { type: '4' }, options: { selectOnClick: true }, content: 'Полиэтилен высокой плотности "2"' },
+                        { data: { type: '5' }, options: { selectOnClick: true }, content: 'ПЭТ "1"' }
+                    ]
+                });
+
+                // Обработчик изменения выбора в контроле сортировки
+                recyclingTypeControl.events.add('select', function (event) {
+                    const selectedType = event.get('target').data.get('type');
+
+                    // Перебор всех меток на карте
+                    map.geoObjects.each(function (marker) {
+                        // Если тип переработки выбранного элемента не соответствует типу выбранного элемента в контроле, то скрыть метку
+                        if (selectedType !== 'all' && marker.properties.get('recyclingType').indexOf(selectedType) === -1) {
+                            marker.options.set('visible', false);
+                        } else {
+                            marker.options.set('visible', true);
+                        }
+                    });
+                });
+
+                // Добавление контрола сортировки на карту
+                map.controls.add(recyclingTypeControl);
+            });
+    }
+</script>
 </body>
 </html>
 
