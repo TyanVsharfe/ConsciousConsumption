@@ -2,33 +2,25 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <title>Карта</title>
+    <title>Map</title>
     <script src="/main.js"></script>
     <link rel="stylesheet" href="/style.css">.
     <script th:src="'https://api-maps.yandex.ru/2.1/?apikey=' + ${keyAPI} + '&lang=ru_RU'"></script>
 </head>
 
 <body>
-<div id="map"></div>
+<div id="map" style="z-index: 1"></div>
 <div id="json-data" th:text="${jsonData}" style="display:none;"></div>
 <script>
+    var myMap
     ymaps.ready(init);
     function init(){
-        var myMap = new ymaps.Map("map", {
-            center: [55.159902, 61.402554],
+        myMap = new ymaps.Map("map", {
+            center: [55.159902, 61.402556],
+            controls: ["searchControl", "geolocationControl","zoomControl","fullscreenControl","trafficControl","typeSelector"],
             zoom: 10
         });
-        var myPlacemark = new ymaps.Placemark([55.190488, 61.356632], {
-            hintContent: 'ЧЮК',
-            balloonContent: 'Это пиздец'
-        });
-        var myPlacemark1 = new ymaps.Placemark([61.110556, -122.680278], {
-            hintContent: 'Че эта!',
-            balloonContent: 'Америка?'
-        });
 
-        myMap.geoObjects.add(myPlacemark);
-        myMap.geoObjects.add(myPlacemark1);
         addMarkersToMap(myMap)
     }
 
@@ -52,43 +44,58 @@
                     // Добавление метки на карту
                     map.geoObjects.add(marker);
                 });
+            });
+    }
 
-                // Создание контрола для сортировки по группам
-                const recyclingTypeControl = new ymaps.control.ListBox({
-                    data: {
-                        content: 'Тип переработки',
-                        title: 'Выберите тип переработки'
-                    },
-                    items: [
-                        { data: { type: 'all' }, options: { selectOnClick: true }, state: { selected: true }, content: 'Все' },
-                        { data: { type: '1' }, options: { selectOnClick: true }, content: 'Алюминиевая банка' },
-                        { data: { type: '2' }, options: { selectOnClick: true }, content: 'Бумага' },
-                        { data: { type: '3' }, options: { selectOnClick: true }, content: 'Картон' },
-                        { data: { type: '4' }, options: { selectOnClick: true }, content: 'Полиэтилен высокой плотности "2"' },
-                        { data: { type: '5' }, options: { selectOnClick: true }, content: 'ПЭТ "1"' }
-                    ]
-                });
-
-                // Обработчик изменения выбора в контроле сортировки
-                recyclingTypeControl.events.add('select', function (event) {
-                    const selectedType = event.get('target').data.get('type');
-
-                    // Перебор всех меток на карте
-                    map.geoObjects.each(function (marker) {
-                        // Если тип переработки выбранного элемента не соответствует типу выбранного элемента в контроле, то скрыть метку
-                        if (selectedType !== 'all' && marker.properties.get('recyclingType').indexOf(selectedType) === -1) {
-                            marker.options.set('visible', false);
-                        } else {
-                            marker.options.set('visible', true);
+    function addMarkersToMapFilter(map, num) {
+        myMap.geoObjects.removeAll();
+        // Загрузка данных из JSON файла
+        fetch('bd.json')
+            .then(response => response.json())
+            .then(data => {
+                // Перебор элементов в массиве данных
+                data.forEach(item => {
+                    // Создание метки на карте
+                    const marker = new ymaps.Placemark(
+                        [item.Latitude, item.Longitude],
+                        {
+                            balloonContentBody: item.Description,
+                            balloonContentHeader: item.Label,
+                            recyclingType: item.RecyclingType.split(',')
                         }
-                    });
+                    );
+                    // Добавление метки на карту
+                    if(item.RecyclingType.split(',').map(Number).includes(num)) {
+                        map.geoObjects.add(marker);
+                    }
                 });
-
-                // Добавление контрола сортировки на карту
-                map.controls.add(recyclingTypeControl);
             });
     }
 </script>
+
+<H1>Conscious consumption</H1>
+
+<div>
+    <ul class="list3a">
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,1)">Бумага</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,2)">Пластик</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,3)">Стекло</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,4)">Металл</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,5)">Одежда</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,6)">Лампочки</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,7)">Крышечки</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,8)">Техника</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,9)">Батарейки</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,10)">Шины</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,11)">Опасное</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,12)">Тетра-пак</button></li>
+        <li><button class="my-button" onclick="addMarkersToMapFilter(myMap,13)">Другое</button></li>
+        <li><button class="my-button" onclick="addMarkersToMap(myMap)">Все</button></li>
+        <li> <button class="my-button" onclick="myMap.geoObjects.removeAll();">Очистить</button></li>
+    </ul>
+</div>
+
+
 </body>
 </html>
 
