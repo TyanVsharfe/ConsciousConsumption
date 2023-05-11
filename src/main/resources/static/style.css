@@ -1,0 +1,17 @@
+#map {
+    width: 70%;
+    height: 100%; /* начальная высота карты */
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Медиа-запрос для адаптивной высоты карты */
+@media screen and (max-width: 768px) {
+    #map {
+        height: 300px;
+    }
+}

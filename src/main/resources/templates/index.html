@@ -1,26 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="utf-8">
-    <title>Карта с меткой</title>
+    <title>Карта</title>
+    <script src="/main.js"></script>
+    <link rel="stylesheet" href="/style.css">.
     <script th:src="'https://api-maps.yandex.ru/2.1/?apikey=' + ${keyAPI} + '&lang=ru_RU'"></script>
     <script>
         ymaps.ready(init);
         function init(){
             var myMap = new ymaps.Map("map", {
-                center: [55.76, 37.64],
+                center: [55.159902, 61.402554],
                 zoom: 10
             });
-            var myPlacemark = new ymaps.Placemark([55.76, 37.64], {
-                hintContent: 'Москва!',
-                balloonContent: 'Столица России'
+            var myPlacemark = new ymaps.Placemark([55.190488, 61.356632], {
+                hintContent: 'ЧЮК',
+                balloonContent: 'Это пиздец'
             });
+            var myPlacemark1 = new ymaps.Placemark([61.110556, -122.680278], {
+                hintContent: 'Че эта!',
+                balloonContent: 'Америка?'
+            });
+
+            //addMarkersFromCSV(myMap, 'path/to/your/csv/file.csv');
             myMap.geoObjects.add(myPlacemark);
+            myMap.geoObjects.add(myPlacemark1);
         }
     </script>
 </head>
 <body>
-<div id="map" style="width: 1366px; height: 768px"></div>
+<div id="map"></div>
 </body>
 </html>
 
